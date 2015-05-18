@@ -1,12 +1,13 @@
 package me.dm7.barcodescanner.core;
 
 import android.content.Context;
-import android.graphics.Point;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.hardware.Camera;
-import android.os.AsyncTask;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 
 public abstract class BarcodeScannerView extends FrameLayout implements Camera.PreviewCallback  {
     private Camera mCamera;
@@ -27,17 +28,31 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
     public void setupLayout() {
         mPreview = new CameraPreview(getContext());
         mViewFinderView = new ViewFinderView(getContext());
-        addView(mPreview);
+
+        RelativeLayout relativeLayout = new RelativeLayout(getContext());
+        relativeLayout.setGravity(Gravity.CENTER);
+        relativeLayout.setBackgroundColor(Color.BLACK);
+        relativeLayout.addView(mPreview);
+        addView(relativeLayout);
+
         addView(mViewFinderView);
     }
 
-    public void startCamera() {
-        mCamera = CameraUtils.getCameraInstance();
+    public void startCamera(int cameraId) {
+        startCamera(CameraUtils.getCameraInstance(cameraId));
+    }
+
+    public void startCamera(Camera camera) {
+        mCamera = camera;
         if(mCamera != null) {
             mViewFinderView.setupViewFinder();
             mPreview.setCamera(mCamera, this);
             mPreview.initCameraPreview();
         }
+    }
+
+    public void startCamera() {
+        startCamera(CameraUtils.getCameraInstance());
     }
 
     public void stopCamera() {
@@ -49,25 +64,20 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
         }
     }
 
-    public synchronized Rect getFramingRectInPreview(int width, int height) {
+    public synchronized Rect getFramingRectInPreview(int previewWidth, int previewHeight) {
         if (mFramingRectInPreview == null) {
             Rect framingRect = mViewFinderView.getFramingRect();
-            if (framingRect == null) {
+            int viewFinderViewWidth = mViewFinderView.getWidth();
+            int viewFinderViewHeight = mViewFinderView.getHeight();
+            if (framingRect == null || viewFinderViewWidth == 0 || viewFinderViewHeight == 0) {
                 return null;
             }
+
             Rect rect = new Rect(framingRect);
-            Point screenResolution = DisplayUtils.getScreenResolution(getContext());
-            Point cameraResolution = new Point(width, height);
-
-            if (cameraResolution == null || screenResolution == null) {
-                // Called early, before init even finished
-                return null;
-            }
-
-            rect.left = rect.left * cameraResolution.x / screenResolution.x;
-            rect.right = rect.right * cameraResolution.x / screenResolution.x;
-            rect.top = rect.top * cameraResolution.y / screenResolution.y;
-            rect.bottom = rect.bottom * cameraResolution.y / screenResolution.y;
+            rect.left = rect.left * previewWidth / viewFinderViewWidth;
+            rect.right = rect.right * previewWidth / viewFinderViewWidth;
+            rect.top = rect.top * previewHeight / viewFinderViewHeight;
+            rect.bottom = rect.bottom * previewHeight / viewFinderViewHeight;
 
             mFramingRectInPreview = rect;
         }
@@ -75,7 +85,8 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
     }
 
     public void setFlash(boolean flag) {
-        if(CameraUtils.isFlashSupported(getContext()) && mCamera != null) {
+        if(mCamera != null && CameraUtils.isFlashSupported(mCamera)) {
+
             Camera.Parameters parameters = mCamera.getParameters();
             if(flag) {
                 if(parameters.getFlashMode().equals(Camera.Parameters.FLASH_MODE_TORCH)) {
@@ -93,7 +104,7 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
     }
 
     public boolean getFlash() {
-        if(CameraUtils.isFlashSupported(getContext()) && mCamera != null) {
+        if(mCamera != null && CameraUtils.isFlashSupported(mCamera)) {
             Camera.Parameters parameters = mCamera.getParameters();
             if(parameters.getFlashMode().equals(Camera.Parameters.FLASH_MODE_TORCH)) {
                 return true;
@@ -105,7 +116,7 @@ public abstract class BarcodeScannerView extends FrameLayout implements Camera.P
     }
 
     public void toggleFlash() {
-        if(CameraUtils.isFlashSupported(getContext()) && mCamera != null) {
+        if(mCamera != null && CameraUtils.isFlashSupported(mCamera)) {
             Camera.Parameters parameters = mCamera.getParameters();
             if(parameters.getFlashMode().equals(Camera.Parameters.FLASH_MODE_TORCH)) {
                 parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);

@@ -1,6 +1,7 @@
 package me.dm7.barcodescanner.core;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Point;
 import android.hardware.Camera;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.view.Display;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import java.util.List;
@@ -110,6 +112,39 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Camera.Parameters parameters = mCamera.getParameters();
         parameters.setPreviewSize(optimalSize.width, optimalSize.height);
         mCamera.setParameters(parameters);
+        adjustViewSize(optimalSize);
+    }
+
+    private void adjustViewSize(Camera.Size cameraSize) {
+        Point previewSize = convertSizeToLandscapeOrientation(new Point(getWidth(), getHeight()));
+        float cameraRatio = ((float) cameraSize.width) / cameraSize.height;
+        float screenRatio = ((float) previewSize.x) / previewSize.y;
+
+        if (screenRatio > cameraRatio) {
+            setViewSize((int) (previewSize.y * cameraRatio), previewSize.y);
+        } else {
+            setViewSize(previewSize.x, (int) (previewSize.x / cameraRatio));
+        }
+    }
+
+    private Point convertSizeToLandscapeOrientation(Point size) {
+        if (getDisplayOrientation() % 180 == 0) {
+            return size;
+        } else {
+            return new Point(size.y, size.x);
+        }
+    }
+
+    private void setViewSize(int width, int height) {
+        ViewGroup.LayoutParams layoutParams = getLayoutParams();
+        if (getDisplayOrientation() % 180 == 0) {
+            layoutParams.width = width;
+            layoutParams.height = height;
+        } else {
+            layoutParams.width = height;
+            layoutParams.height = width;
+        }
+        setLayoutParams(layoutParams);
     }
 
     public int getDisplayOrientation() {
@@ -146,6 +181,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Point screenResolution = DisplayUtils.getScreenResolution(getContext());
         int w = screenResolution.x;
         int h = screenResolution.y;
+        if (DisplayUtils.getScreenOrientation(getContext()) == Configuration.ORIENTATION_PORTRAIT) {
+            w = screenResolution.y;
+            h = screenResolution.x;
+        }
 
 
         final double ASPECT_TOLERANCE = 0.1;
