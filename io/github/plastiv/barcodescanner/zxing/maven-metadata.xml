@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>io.github.plastiv.barcodescanner</groupId>
+  <artifactId>zxing</artifactId>
+  <version>1.7</version>
+  <versioning>
+    <versions>
+      <version>1.7</version>
+    </versions>
+    <lastUpdated>20150518153033</lastUpdated>
+  </versioning>
+</metadata>
