@@ -1,4 +1,4 @@
-apply plugin: 'android-library'
+apply plugin: 'com.android.library'
 
 ext {
     isLibrary = true
@@ -14,6 +14,6 @@ dependencies {
 
 android {
     defaultConfig {
-        applicationId "${project.group}.core"
+        //applicationId "${project.group}.core"
     }
 }
