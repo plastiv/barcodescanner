@@ -9,7 +9,7 @@ buildscript {
 }
 
 allprojects {
-    group = 'me.dm7.barcodescanner'
+    group = 'io.github.plastiv.barcodescanner'
     version = '1.6.3'
 
     repositories {
@@ -30,7 +30,7 @@ subprojects {
         ext.pluginContainer = project.getPlugins()
         if(ext.pluginContainer.hasPlugin("com.android.application") || ext.pluginContainer.hasPlugin("com.android.library")) {
             android {
-                compileSdkVersion 21
+                compileSdkVersion 22
                 buildToolsVersion '21.1.2'
 
                 android {
@@ -47,13 +47,13 @@ subprojects {
                 }
             }
         }
-        if(project.isLibrary && rootProject.hasProperty('sonatypeUsername') && rootProject.hasProperty('sonatypePassword')) {
+        if(project.isLibrary) {
             configure(project) {
                 apply plugin: 'maven'
                 apply plugin: 'signing'
 
                 signing {
-                    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+                    required false
                     sign configurations.archives
                 }
 
@@ -61,15 +61,9 @@ subprojects {
                     repositories.mavenDeployer {
                         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-                        repository(url: sonatypeRepo) {
-                            authentication(userName: sonatypeUsername , password: sonatypePassword)
-                            releases(updatePolicy: 'always')
-                        }
+                        repository(url: "file://C:\\Users\\spechenizkyi\\Workspaces\\ZBarcodeScannerRepo")
 
-                        snapshotRepository(url: sonatypeSnapshotRepo) {
-                            authentication(userName: sonatypeUsername , password: sonatypePassword)
-                            snapshots(updatePolicy: 'always')
-                        }
+                        
 
                         pom.project {
                             name project.pomName
